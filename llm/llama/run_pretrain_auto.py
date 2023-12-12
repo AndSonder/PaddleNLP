@@ -372,6 +372,47 @@ def init_seed(seed: int = 1234, args=None):
             paddle.seed(args.seed)
 
 
+import cProfile
+import pstats
+
+
+def do_cprofile():
+    """
+    Decorator for function profiling.
+    """
+
+    def wrapper(func):
+        def profiled_func(*args, **kwargs):
+            # Flag for do profiling or not.
+            filename = "/home/workspace/PaddleNLP/llm/llama/profile{}.out"
+            i = 0
+            while os.path.exists(filename.format(i)):
+                i += 1
+            filename = filename.format(i)
+            DO_PROF = True
+            if DO_PROF:
+                profile = cProfile.Profile()
+                profile.enable()
+                try:
+                    result = func(*args, **kwargs)
+                except:
+                    pass
+                profile.disable()
+                # Sort stat by internal time.
+                sortby = "tottime"
+                ps = pstats.Stats(profile).sort_stats(sortby)
+                ps.dump_stats(filename)
+                return
+            else:
+                result = func(*args, **kwargs)
+            return result
+
+        return profiled_func
+
+    return wrapper
+
+
+# @do_cprofile()
 def main():
     parser = PdArgumentParser((ModelArguments, DataArguments, PreTrainingArguments))
     if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
@@ -442,6 +483,8 @@ def main():
     config.use_recompute = training_args.recompute
     config.tensor_parallel_degree = training_args.tensor_parallel_degree
     config.tensor_parallel_rank = training_args.tensor_parallel_rank
+
+    config.num_hidden_layers = 12
 
     print("Final pre-training config:", config)
 
@@ -543,7 +586,7 @@ def main():
     for epoch_idx in range(num_train_epochs):
         for step, inputs in enumerate(train_dataloader):
             outs = engine.run(inputs, mode="train")
-
+            # return
             if "loss" in outs:
                 tr_loss_step = np.sum(outs["loss"])
             else:
