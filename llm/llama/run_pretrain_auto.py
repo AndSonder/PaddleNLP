@@ -384,23 +384,23 @@ def do_cprofile():
     def wrapper(func):
         def profiled_func(*args, **kwargs):
             # Flag for do profiling or not.
-            filename = "/home/workspace/PaddleNLP/llm/llama/profile{}.out"
-            i = 0
-            while os.path.exists(filename.format(i)):
-                i += 1
-            filename = filename.format(i)
             DO_PROF = True
             if DO_PROF:
                 profile = cProfile.Profile()
                 profile.enable()
                 try:
                     result = func(*args, **kwargs)
-                except:
-                    pass
+                except Exception as e:
+                    print(e)
                 profile.disable()
                 # Sort stat by internal time.
                 sortby = "tottime"
                 ps = pstats.Stats(profile).sort_stats(sortby)
+                filename = "/home/workspace/PaddleNLP/llm/llama/profile{}.out"
+                i = 0
+                while os.path.exists(filename.format(i)):
+                    i += 1
+                filename = filename.format(i)
                 ps.dump_stats(filename)
                 return
             else:
@@ -412,7 +412,7 @@ def do_cprofile():
     return wrapper
 
 
-# @do_cprofile()
+@do_cprofile()
 def main():
     parser = PdArgumentParser((ModelArguments, DataArguments, PreTrainingArguments))
     if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
@@ -550,6 +550,7 @@ def main():
     )
     print_config(training_args)
 
+    # pdb.set_trace()
     engine = auto.Engine(model, loss_func, optimizer, strategy=training_args.strategy)
     engine.prepare(
         [
@@ -583,10 +584,11 @@ def main():
     global_step_last_logged = 0
     start_time_last_logged = time.time()
     tr_loss = float(0)
+
     for epoch_idx in range(num_train_epochs):
         for step, inputs in enumerate(train_dataloader):
             outs = engine.run(inputs, mode="train")
-            # return
+            return
             if "loss" in outs:
                 tr_loss_step = np.sum(outs["loss"])
             else:
