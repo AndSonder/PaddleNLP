@@ -81,10 +81,6 @@ def main():
         + f"distributed training: {bool(training_args.local_rank != -1)}, 16-bits training: {training_args.fp16 or training_args.bf16}"
     )
 
-    # if using chat_template, data_args.eval_with_do_generation must be false
-    if data_args.chat_template is not None:
-        data_args.eval_with_do_generation = False
-
     # Detecting last checkpoint.
     last_checkpoint = None
     if os.path.isdir(training_args.output_dir) and training_args.do_train and not training_args.overwrite_output_dir:
@@ -170,6 +166,10 @@ def main():
     tokenizer = AutoTokenizer.from_pretrained(model_args.model_name_or_path, from_aistudio=model_args.from_aistudio)
     # init chat_template for tokenizer
     init_chat_template(tokenizer, model_args.model_name_or_path, data_args.chat_template)
+
+    # if using chat_template, data_args.eval_with_do_generation must be false
+    if tokenizer.chat_template is not None:
+        data_args.eval_with_do_generation = False
 
     if isinstance(tokenizer, LlamaTokenizer):
         tokenizer.pad_token_id = tokenizer.eos_token_id
@@ -304,24 +304,26 @@ def main():
     else:
         trans_func = partial(get_convert_example(model), tokenizer=tokenizer, data_args=data_args)
 
-    if data_args.intokens:
+    if data_args.zero_padding:
         if (
             model.base_model_prefix not in ["llama", "bloom", "chatglm", "chatglm_v2", "qwen"]
             and training_args.pipeline_parallel_degree < 1
         ):
             raise NotImplementedError(
-                "InTokens data stream is only implemented for LLaMA, Bloom, ChatGLM and QWen so far."
+                "Zero Padding data stream is only implemented for LLaMA, Bloom, ChatGLM and QWen so far."
             )
     train_ds = (
-        train_ds.map(partial(trans_func, is_test=False, intokens=data_args.intokens)) if train_ds is not None else None
+        train_ds.map(partial(trans_func, is_test=False, intokens=data_args.zero_padding))
+        if train_ds is not None
+        else None
     )
     ptq_ds = (
-        ptq_ds.map(partial(trans_func, is_test=False, intokens=data_args.intokens)) if ptq_ds is not None else None
+        ptq_ds.map(partial(trans_func, is_test=False, intokens=data_args.zero_padding)) if ptq_ds is not None else None
     )
-    eval_intokens = data_args.intokens
-    if data_args.intokens and data_args.eval_with_do_generation:
+    eval_intokens = data_args.zero_padding
+    if data_args.zero_padding and data_args.eval_with_do_generation:
         logger.warning(
-            "`intokens` conflicts with `eval_with_do_generation`. Setting intokens to False for the eval_dataset."
+            "`zero_padding` conflicts with `eval_with_do_generation`. Setting zero_padding to False for the eval_dataset."
         )
         eval_intokens = False
     dev_ds = (
@@ -329,12 +331,12 @@ def main():
         if dev_ds is not None
         else None
     )
-    if data_args.intokens:
+    if data_args.zero_padding:
         if data_args.lazy:
             intoken_dataset = InTokensIterableDataset
         else:
             intoken_dataset = InTokensMapDataset
-        logger.info("Creating InTokens Data Stream. This may take a few minutes.")
+        logger.info("Creating Zero Padding Data Stream. This may take a few minutes.")
         train_ds = (
             intoken_dataset(
                 train_ds,
