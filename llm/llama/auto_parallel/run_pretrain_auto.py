@@ -439,6 +439,7 @@ import cProfile
 import pstats
 
 
+# /root/miniconda3/envs/python3.8/lib/python3.8/site-packages/paddle/base/executor.py
 def do_cprofile():
     """
     Decorator for function profiling.
@@ -448,6 +449,9 @@ def do_cprofile():
         def profiled_func(*args, **kwargs):
             # Flag for do profiling or not.
             DO_PROF = True
+            import time
+
+            time.sleep(10)
             if DO_PROF:
                 profile = cProfile.Profile()
                 profile.enable()
@@ -700,7 +704,6 @@ def main():
 
             for micro_batch in local_batches:
                 outs = engine.run(micro_batch, mode="train")
-
                 if "loss" in outs:
                     tr_loss_step = np.sum(outs["loss"])
                 else:
