@@ -550,10 +550,15 @@ def main():
         model_args.no_recompute_layers.sort()
 
     config.vocab_size = model_args.vocab_size if model_args.vocab_size is not None else config.vocab_size
+
     config.hidden_size = model_args.hidden_size if model_args.hidden_size is not None else config.hidden_size
     config.intermediate_size = (
         model_args.intermediate_size if model_args.intermediate_size is not None else config.intermediate_size
     )
+
+    # hack the model
+    config.num_hidden_layers = 4
+
     config.num_hidden_layers = (
         model_args.num_hidden_layers if model_args.num_hidden_layers is not None else config.num_hidden_layers
     )
@@ -578,7 +583,6 @@ def main():
     config.tensor_parallel_degree = training_args.tensor_parallel_degree
     config.tensor_parallel_rank = training_args.tensor_parallel_rank
 
-    config.num_hidden_layers = 4
     if training_args.strategy.pipeline.enable and config.virtual_pp_degree > 1:
         pipeline = training_args.strategy.pipeline
         pipeline.vpp_degree = config.virtual_pp_degree
