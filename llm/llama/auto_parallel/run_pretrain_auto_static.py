@@ -439,6 +439,51 @@ def init_seed(seed: int = 1234, args=None):
             paddle.seed(args.seed)
 
 
+import cProfile
+import pstats
+
+
+# /root/miniconda3/envs/python3.8/lib/python3.8/site-packages/paddle/base/executor.py
+def do_cprofile():
+    """
+    Decorator for function profiling.
+    """
+
+    def wrapper(func):
+        def profiled_func(*args, **kwargs):
+            # Flag for do profiling or not.
+            DO_PROF = True
+            import time
+
+            time.sleep(10)
+            if DO_PROF:
+                profile = cProfile.Profile()
+                profile.enable()
+                try:
+                    result = func(*args, **kwargs)
+                except Exception as e:
+                    print(e)
+                profile.disable()
+                # Sort stat by internal time.
+                sortby = "tottime"
+                ps = pstats.Stats(profile).sort_stats(sortby)
+                filename = "/home/workspace/PaddleNLP/llm/llama/profile{}.out"
+                i = 0
+                while os.path.exists(filename.format(i)):
+                    i += 1
+                filename = filename.format(i)
+                ps.dump_stats(filename)
+                return
+            else:
+                result = func(*args, **kwargs)
+            return result
+
+        return profiled_func
+
+    return wrapper
+
+
+# @do_cprofile()
 def main():
     parser = PdArgumentParser((ModelArguments, DataArguments, PreTrainingArguments))
     if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
@@ -511,6 +556,9 @@ def main():
     config.num_hidden_layers = (
         model_args.num_hidden_layers if model_args.num_hidden_layers is not None else config.num_hidden_layers
     )
+
+    config.num_hidden_layers = 4
+
     config.num_attention_heads = (
         model_args.num_attention_heads if model_args.num_attention_heads is not None else config.num_attention_heads
     )

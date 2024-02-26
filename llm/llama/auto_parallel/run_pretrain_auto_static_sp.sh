@@ -24,14 +24,15 @@ rm -rf "output/$task_name""_log"
 export PARALLEL_CROSS_ENTROPY=true
 export FLAGS_call_stack_level=2
 export PYTHONPATH=../../../:$PYTHONPATH
+
 python -u -m paddle.distributed.launch \
-    --gpus "0,1,2,3,4,5,6,7" \
+    --gpus "0,1,2,3" \
     --log_dir "output/$task_name""_log" \
     run_pretrain_auto_static.py \
     --model_type "llama" \
     --model_name_or_path "facebook/llama-7b" \
     --tokenizer_name_or_path "facebook/llama-7b" \
-    --input_dir "./data" \
+    --input_dir "../data" \
     --output_dir "output/$task_name" \
     --split 949,50,1 \
     --max_seq_length 2048 \

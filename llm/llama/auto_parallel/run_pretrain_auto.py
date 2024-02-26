@@ -473,7 +473,6 @@ def do_cprofile():
     return wrapper
 
 
-# @do_cprofile()
 def get_mesh(pp_idx=0):
     mesh = fleet.auto.get_mesh()
     if "pp" in mesh.dim_names:
