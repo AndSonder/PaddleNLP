@@ -37,7 +37,7 @@ python -u -m paddle.distributed.launch \
     --output_dir "output/$task_name" \
     --split 949,50,1 \
     --max_seq_length 2048 \
-    --per_device_train_batch_size 1 \
+    --per_device_train_batch_size 4 \
     --per_device_eval_batch_size 2 \
     --gradient_accumulation_steps 16 \
     --use_flash_attention 0 \
@@ -46,12 +46,12 @@ python -u -m paddle.distributed.launch \
     --fp16_opt_level "O2"  \
     --scale_loss 1024 \
     --tensor_parallel_degree 1 \
-    --pipeline_parallel_degree  \
-    --virtual_pp_degree 2 \
-    --pipeline_schedule_mode "VPP" \
+    --pipeline_parallel_degree  2 \
+    --virtual_pp_degree 1 \
+    --pipeline_schedule_mode "1F1B" \
     --learning_rate 0.0001 \
     --min_learning_rate 0.00001 \
-    --max_steps 10 \
+    --max_steps 20 \
     --save_steps 5000 \
     --weight_decay 0.01 \
     --warmup_ratio 0.01 \
@@ -69,10 +69,9 @@ python -u -m paddle.distributed.launch \
     --device "gpu" \
     --data_impl "mmap" \
     --enable_auto_parallel 1 \
-    --sharding_parallel_degree 4 \
-    --sharding "stage2" \
-    --sharding_parallel_config "enable_stage2_tensor_fusion" \
-    --grad_bucket_size_numel 210355872 \
+    --sharding_parallel_degree 2 \
+    --sharding "stage1" \
+    --sharding_parallel_config "enable_stage1_tensor_fusion" \
     # --amp_master_grad \
     # --tensor_parallel_config "enable_mp_async_allreduce" \
     # --resume_from_checkpoint "output/llama_auto_serial/checkpoint-2" \

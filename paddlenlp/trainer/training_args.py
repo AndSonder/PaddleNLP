@@ -1162,7 +1162,7 @@ class TrainingArguments:
 
             strategy = fleet.auto.Strategy()
             # navie-pp: pipeline_parallel_degree > 1 and gradient_accumulation_steps == 1
-            if self.pipeline_parallel_degree > 1 and self.gradient_accumulation_steps > 1:
+            if self.pipeline_parallel_degree > 1:
                 pipeline_parallel_config = set(self.pipeline_parallel_config.split(" "))
                 for x in pipeline_parallel_config:
                     if len(x) > 0:
@@ -1201,7 +1201,7 @@ class TrainingArguments:
                             self.per_device_train_batch_size * self.gradient_accumulation_steps
                         )
 
-            elif self.gradient_accumulation_steps > 1:
+            if self.gradient_accumulation_steps > 1:
                 gradient_merge = strategy.gradient_merge
                 gradient_merge.enable = True
                 gradient_merge.k_steps = self.gradient_accumulation_steps

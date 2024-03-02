@@ -123,6 +123,10 @@ class PreTrainingArguments(TrainingArguments):
     virtual_pipeline_seg_method: str = field(
         default="LlamaDecoderLayerAuto", metadata={"help": "The seg method of spliting pp layer for virtual pipeline."}
     )
+    dp_gradient_sync_after_accumulate: bool = field(
+        default=False,
+        metadata={"help": "do dp sync after gradient merge"},
+    )
 
     def __post_init__(self):
         super().__post_init__()
@@ -649,6 +653,8 @@ def main():
 
     print_config(training_args)
 
+    print(training_args.strategy)
+    exit(0)
     engine = auto.Engine(model, loss_func, optimizer, strategy=training_args.strategy)
 
     checkpoint = None
