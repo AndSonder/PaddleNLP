@@ -653,8 +653,6 @@ def main():
 
     print_config(training_args)
 
-    print(training_args.strategy)
-    exit(0)
     engine = auto.Engine(model, loss_func, optimizer, strategy=training_args.strategy)
 
     checkpoint = None
