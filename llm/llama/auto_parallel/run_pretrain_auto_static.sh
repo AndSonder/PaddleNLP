@@ -22,7 +22,7 @@ task_name="llama_auto_static_dp2sharding2mp2pp2_vpp2"
 rm -rf "output/$task_name""_log"
 
 # export PARALLEL_CROSS_ENTROPY=true
-export FLAGS_call_stack_level=2
+export FLAGS_call_stack_level=4
 export PYTHONPATH=../../../:$PYTHONPATH
 export GLOG_v=0
 
@@ -37,18 +37,17 @@ python -u -m paddle.distributed.launch \
     --output_dir "output/$task_name" \
     --split 949,50,1 \
     --max_seq_length 2048 \
-    --per_device_train_batch_size 4 \
-    --per_device_eval_batch_size 2 \
+    --per_device_train_batch_size 1 \
+    --per_device_eval_batch_size 1 \
     --gradient_accumulation_steps 16 \
     --use_flash_attention 0 \
     --use_fused_rms_norm 0 \
-    --fp16 1 \
+    --fp16 0 \
     --fp16_opt_level "O2"  \
     --scale_loss 1024 \
+    --pipeline_parallel_degree  4 \
     --tensor_parallel_degree 1 \
-    --pipeline_parallel_degree  2 \
-    --virtual_pp_degree 1 \
-    --pipeline_schedule_mode "1F1B" \
+    --pipeline_schedule_mode "ZBH1" \
     --learning_rate 0.0001 \
     --min_learning_rate 0.00001 \
     --max_steps 20 \
@@ -62,16 +61,18 @@ python -u -m paddle.distributed.launch \
     --report_to "visualdl" \
     --disable_tqdm true \
     --continue_training 0 \
-    --recompute 1 \
+    --recompute 0 \
     --recompute_granularity full \
     --do_train \
     --do_eval \
     --device "gpu" \
     --data_impl "mmap" \
     --enable_auto_parallel 1 \
-    --sharding_parallel_degree 2 \
+    --sharding_parallel_degree 1 \
     --sharding "stage1" \
-    --sharding_parallel_config "enable_stage1_tensor_fusion" \
+    --job_schedule_profiler_start 0 \
+    --job_schedule_profiler_end 5 \
+    # --sharding_parallel_config "enable_stage1_tensor_fusion" \
     # --amp_master_grad \
     # --tensor_parallel_config "enable_mp_async_allreduce" \
     # --resume_from_checkpoint "output/llama_auto_serial/checkpoint-2" \
