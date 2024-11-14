@@ -117,24 +117,24 @@ class AutoTrainer(Trainer):
     def _wrap_for_auto(self, model, train_dataloader):
         logger.info("Wrapping model for auto paralle")
         dist_loader = self._wrap_for_dist_loader(train_dataloader)
-        sharding_parallel_dimension = self.args.sharding_parallel_dimension
+        sharding_parallel_mesh_dimension = self.args.sharding_parallel_mesh_dimension
 
         if ShardingOption.SHARD_OP in self.args.sharding:
             self.optimizer = dist.shard_optimizer(
                 self.optimizer,
-                dist.ShardingStage1(shard_dim_name=sharding_parallel_dimension),
+                dist.ShardingStage1(shard_mesh_dim=sharding_parallel_mesh_dimension),
                 self.args.gradient_accumulation_steps,
             )
         elif ShardingOption.SHARD_GRAD_OP in self.args.sharding:
             self.optimizer = dist.shard_optimizer(
                 self.optimizer,
-                dist.ShardingStage2(shard_dim_name=sharding_parallel_dimension),
+                dist.ShardingStage2(shard_mesh_dim=sharding_parallel_mesh_dimension),
                 self.args.gradient_accumulation_steps,
             )
         elif ShardingOption.FULL_SHARD in self.args.sharding:
             self.optimizer = dist.shard_optimizer(
                 self.optimizer,
-                dist.ShardingStage3(shard_dim_name=sharding_parallel_dimension),
+                dist.ShardingStage3(shard_mesh_dim=sharding_parallel_mesh_dimension),
                 self.args.gradient_accumulation_steps,
             )
         else:
