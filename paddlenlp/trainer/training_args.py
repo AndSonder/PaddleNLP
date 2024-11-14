@@ -226,7 +226,7 @@ class TrainingArguments:
             Sharding parameter in certain cards group. For example, aussume we use 2 machines each with 8 cards,
             then set sharding_parallel_degree=8, sharding will only communication inside machine.
             default -1 means sharding parameters between all workers.
-        sharding_parallel_dimension (`str`, *optional*, defaults to `dp`)
+        sharding_parallel_mesh_dimension (`str`, *optional*, defaults to `dp`)
             Specifies the name of the dimension in a multi-dimensional parallelism mesh that is responsible for sharding.
             default `dp` for default parallelism mesh.
         tensor_parallel_degree (`int`, *optional*, defaults to `-1`)
@@ -564,7 +564,7 @@ class TrainingArguments:
             )
         },
     )
-    sharding_parallel_dimension: str = field(
+    sharding_parallel_mesh_dimension: str = field(
         default="dp",
         metadata={
             "help": (
