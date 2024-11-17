@@ -122,19 +122,19 @@ class AutoTrainer(Trainer):
         if ShardingOption.SHARD_OP in self.args.sharding:
             self.optimizer = dist.shard_optimizer(
                 self.optimizer,
-                dist.ShardingStage1(shard_mesh_dim=sharding_parallel_mesh_dimension),
+                dist.ShardingStage1(sharding_mesh_dim=sharding_parallel_mesh_dimension),
                 self.args.gradient_accumulation_steps,
             )
         elif ShardingOption.SHARD_GRAD_OP in self.args.sharding:
             self.optimizer = dist.shard_optimizer(
                 self.optimizer,
-                dist.ShardingStage2(shard_mesh_dim=sharding_parallel_mesh_dimension),
+                dist.ShardingStage2(sharding_mesh_dim=sharding_parallel_mesh_dimension),
                 self.args.gradient_accumulation_steps,
             )
         elif ShardingOption.FULL_SHARD in self.args.sharding:
             self.optimizer = dist.shard_optimizer(
                 self.optimizer,
-                dist.ShardingStage3(shard_mesh_dim=sharding_parallel_mesh_dimension),
+                dist.ShardingStage3(sharding_mesh_dim=sharding_parallel_mesh_dimension),
                 self.args.gradient_accumulation_steps,
             )
         else:
