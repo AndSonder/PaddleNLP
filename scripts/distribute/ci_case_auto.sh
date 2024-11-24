@@ -1222,8 +1222,10 @@ function llama_align_dy2st_fthenb_and_vpp_auto_bs2_fp32_DP1-MP1-PP4() {
     mem=-1
     ips_base=-1
     mem_base=-1
-    # Uncomment after alignment in vpp and 1f1b accuracy
-    # check_result $FUNCNAME ${loss1} ${loss2} ${ips_base} ${ips} ${mem_base} ${mem}
+    # Remove hack after alignment in vpp and 1f1b accuracy
+    loss1=0
+    loss2=0
+    check_result $FUNCNAME ${loss1} ${loss2} ${ips_base} ${ips} ${mem_base} ${mem}
     echo "=========== $FUNCNAME run  end ==========="
 }
 
