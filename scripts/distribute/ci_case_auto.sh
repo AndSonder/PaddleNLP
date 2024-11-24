@@ -1137,7 +1137,7 @@ function llama_align_dy2st_fthenb_and_vpp_auto_bs2_fp32_DP1-MP1-PP4() {
     max_step=10
     to_static=1
 
-    for pp_mode in "1F1B" "VPP"; do
+    for pp_mode in "FThenB" "VPP"; do
         export FLAGS_enable_pir_api=${use_pir}
         export FLAGS_enable_pir_in_executor=${use_pir}
         rm -rf $case_out_dir
@@ -1211,7 +1211,7 @@ function llama_align_dy2st_fthenb_and_vpp_auto_bs2_fp32_DP1-MP1-PP4() {
             >>${log_path}/$FUNCNAME 2>&1
         
         loss=$(grep "global_step: 10," "$case_log_dir/workerlog.0" | grep -oP '(?<=loss: )\d+(\.\d+)?' | awk -F ',' '{print $1}')
-        if [ "$pp_mode" == "1F1B" ]; then
+        if [ "$pp_mode" == "FThenB" ]; then
             loss1=($loss)
         else
             loss2=($loss)
