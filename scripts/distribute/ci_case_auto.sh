@@ -1136,6 +1136,8 @@ function llama_align_dy2st_fthenb_and_vpp_auto_bs2_fp32_DP1-MP1-PP4() {
 
     max_step=10
     to_static=1
+    loss1_array=()
+    loss2_array=()
 
     for pp_mode in "FThenB" "VPP"; do
         export FLAGS_enable_pir_api=${use_pir}
