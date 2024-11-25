@@ -1209,7 +1209,16 @@ function llama_align_dy2st_fthenb_and_vpp_auto_bs2_fp32_DP1-MP1-PP4() {
             --pipeline_schedule_mode $pp_mode \
             --virtual_pp_degree $vpp_degree \
             >>${log_path}/$FUNCNAME 2>&1
-        
+
+        for step in $(seq 1 $max_step); do
+            loss=$(grep "global_step: $step," "$case_log_dir/workerlog.0" | grep -oP '(?<=loss: )\d+(\.\d+)?' | awk -F ',' '{print $1}')
+            if [ "$pp_mode" == "FThenB" ]; then
+                loss1_array+=($loss)
+            else
+                loss2_array+=($loss)
+            fi
+        done
+
         loss=$(grep "global_step: 10," "$case_log_dir/workerlog.0" | grep -oP '(?<=loss: )\d+(\.\d+)?' | awk -F ',' '{print $1}')
         if [ "$pp_mode" == "FThenB" ]; then
             loss1=($loss)
@@ -1222,6 +1231,9 @@ function llama_align_dy2st_fthenb_and_vpp_auto_bs2_fp32_DP1-MP1-PP4() {
     mem=-1
     ips_base=-1
     mem_base=-1
+    for step in $(seq 1 $max_step); do
+        echo "step=$step fthenb loss: ${loss1_array[$step-1]}, vpp loss: ${loss2_array[$step-1]}"
+    done
     check_result $FUNCNAME ${loss1} ${loss2} ${ips_base} ${ips} ${mem_base} ${mem}
     echo "=========== $FUNCNAME run  end ==========="
 }
