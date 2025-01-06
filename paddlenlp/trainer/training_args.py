@@ -1663,7 +1663,8 @@ class TrainingArguments:
 
                     if "enable_stage1_tensor_fusion" in sharding_parallel_config:
                         sharding.grad_bucket_size_numel = 210355872
-                        sharding.enable_stage1_tensor_fusion = True
+                        if sharding.stage == 1:
+                            sharding.enable_stage1_tensor_fusion = True
 
                     if "enable_stage1_tensor_fusion_blanced_save_load" in sharding_parallel_config:
                         sharding.save_unbalanced_param = False
