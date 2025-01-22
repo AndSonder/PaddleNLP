@@ -713,8 +713,23 @@ class AutoTrainer(Trainer):
                         for key, value in model.state_dict("opt").items()
                         if not any(keyword in key for keyword in FREE_SVAE_LOAD_KEY_PATTERNS)
                     }
+                    model_state_dict = model.state_dict("param")
+                    if self.args.should_save_sharding_tensor_fusion_unbalanced_model:
+                        logger.info("save sharding tensor fusion unbalanced model")
+                        opt_state_dict = self.model_wrapped._convert_state_dict_with_rank_unique_name(opt_state_dict)
+                        model_state_dict = self.model_wrapped._convert_state_dict_with_rank_unique_name(
+                            model_state_dict
+                        )
+                    if self.args.should_save_sharding_tensor_fusion_balanced_model:
+                        logger.info("save sharding tensor fusion balanced model")
+                        opt_state_dict = self.model_wrapped._convert_state_dict_without_tensor_fusion_param(
+                            opt_state_dict
+                        )
+                        model_state_dict = self.model_wrapped._convert_state_dict_without_tensor_fusion_param(
+                            model_state_dict
+                        )
                     state_dict = {
-                        MODEL_NAME: model.state_dict("param"),
+                        MODEL_NAME: model_state_dict,
                         OPTIMIZER_NAME: opt_state_dict,
                     }
                 else:
@@ -854,6 +869,18 @@ class AutoTrainer(Trainer):
                     for key, value in self.model_wrapped.state_dict("opt").items()
                     if not any(keyword in key for keyword in FREE_SVAE_LOAD_KEY_PATTERNS)
                 }
+                if self.args.should_load_sharding_tensor_fusion_unbalanced_model:
+                    logger.info("load sharding tensor fusion unbalanced model")
+                    model_state_dict = self.model_wrapped._convert_state_dict_with_rank_unique_name(model_state_dict)
+                    optim_state_dict = self.model_wrapped._convert_state_dict_with_rank_unique_name(optim_state_dict)
+                if self.args.should_load_sharding_tensor_fusion_balanced_model:
+                    logger.info("load sharding tensor fusion balanced model")
+                    model_state_dict = self.model_wrapped._convert_state_dict_without_tensor_fusion_param(
+                        model_state_dict
+                    )
+                    optim_state_dict = self.model_wrapped._convert_state_dict_without_tensor_fusion_param(
+                        optim_state_dict
+                    )
             else:
                 model_state_dict = self.model_wrapped.state_dict()
                 optim_state_dict = self.optimizer.state_dict()
@@ -888,6 +915,16 @@ class AutoTrainer(Trainer):
                 self._load_ckpt_func(state_dict, ckpt_path)
 
             if self.args.to_static:
+                if self.args.should_load_sharding_tensor_fusion_unbalanced_model:
+                    model_state_dict = self.model_wrapped._convert_state_dict_with_origin_name(model_state_dict)
+                    optim_state_dict = self.model_wrapped._convert_state_dict_with_origin_name(optim_state_dict)
+                if self.args.should_load_sharding_tensor_fusion_balanced_model:
+                    model_state_dict = self.model_wrapped._convert_state_dict_with_tensor_fusion_param(
+                        model_state_dict
+                    )
+                    optim_state_dict = self.model_wrapped._convert_state_dict_with_tensor_fusion_param(
+                        optim_state_dict
+                    )
                 self.model_wrapped.set_state_dict(model_state_dict)
                 self.model_wrapped.set_state_dict(optim_state_dict)
             # release memory

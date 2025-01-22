@@ -619,6 +619,32 @@ class TrainingArguments:
             )
         },
     )
+
+    load_model_with_sharding_tensor_fusion: bool = field(
+        default=True,
+        metadata={
+            "help": (
+                "When using sharding stage1, enabling tensor fusion, and setting `load_model_with_sharding_tensor_fusion` to `True`, "
+                "the model is loaded with unbalanced weights, meaning that the model weights are stored in an unbalanced format to avoid "
+                "additional memory overhead. If set to `False`, the model will be loaded with balanced weights, which may increase memory "
+                "consumption. This setting is only available in auto parallel to_static mode."
+            )
+        },
+    )
+
+    save_model_with_sharding_tensor_fusion: bool = field(
+        default=True,
+        metadata={
+            "help": (
+                "When using sharding stage1 and enabling tensor fusion, setting `save_model_with_sharding_tensor_fusion` to `True` "
+                "saves the model with unbalanced weights, which helps avoid additional memory consumption. Setting it to `False` "
+                "saves the model with balanced weights, which may increase memory usage but ensures uniform parameter distribution. "
+                "This option allows flexibility in choosing the save format based on memory requirements. "
+                "This setting is only available in auto parallel to_static mode."
+            )
+        },
+    )
+
     tensor_parallel_degree: int = field(
         default=-1,
         metadata={
@@ -740,7 +766,6 @@ class TrainingArguments:
                 "enable_stage2_overlap, overlap stage2 NCCL communication with computation. There are some constraints for the overlap, such as the logging_step should be bigger than 1 for broadcast overlap and no other sync could be called during the training for broadcast overlap\n"
                 "enable_stage1_broadcast_overlap, overlap stage1 V1 broadcast with next step forward computation. There are some constraints for the overlap, such as the logging_step should be bigger than 1 for broadcast overlap forward compute and no other sync could be called during the training for broadcast overlap.\n"
                 "enable_stage1_allgather_overlap, overlap stage1 V2 allgather with next step forward computation. There are some constraints for the overlap, such as the logging_step should be bigger than 1 for allgather overlap forward compute and no other sync could be called during the training for allgather overlap.\n"
-                "enable_tensor_fusion_blanced_save_load, convert unbalanced optimizer state to balanced state when using tensor fusion strategy, which may increase the memory occupation."
             )
         },
     )
@@ -1671,7 +1696,6 @@ class TrainingArguments:
                             "enable_tensor_fusion",
                             "enable_overlap",
                             "enable_release_grads",
-                            "enable_tensor_fusion_blanced_save_load",
                         ]:
                             if x in ["enable_stage1_overlap", "enable_stage2_overlap"]:
                                 raise ValueError(
@@ -1686,7 +1710,7 @@ class TrainingArguments:
                             raise ValueError(
                                 f"Found unknown sharding mode config {x}, "
                                 f"accpet config is enable_tensor_fusion, "
-                                "enable_overlap, enable_release_grads, enable_tensor_fusion_blanced_save_load."
+                                "enable_overlap, enable_release_grads."
                             )
 
                     if "enable_overlap" in sharding_parallel_config:
@@ -1695,9 +1719,6 @@ class TrainingArguments:
                     if "enable_tensor_fusion" in sharding_parallel_config:
                         sharding.grad_bucket_size_numel = 210355872
                         sharding.enable_tensor_fusion = True
-
-                    if "enable_tensor_fusion_blanced_save_load" in sharding_parallel_config:
-                        sharding.save_unbalanced_param = False
 
                     if "enable_release_grads" in sharding_parallel_config:
                         sharding.release_gradients = True
@@ -2273,3 +2294,53 @@ class TrainingArguments:
                     logger.debug("{:30}: {}".format(a, v))
 
         logger.debug("")
+
+    @property
+    def should_load_sharding_tensor_fusion_balanced_model(self):
+        if not self.enable_auto_parallel:
+            return False
+
+        return (
+            self.to_static
+            and ShardingOption.SHARD_OP in self.sharding
+            and self.sharding_parallel_degree > 1
+            and not self.load_model_with_sharding_tensor_fusion
+            and "enable_tensor_fusion" in self.sharding_parallel_config
+        )
+
+    @property
+    def should_load_sharding_tensor_fusion_unbalanced_model(self):
+        if not self.enable_auto_parallel:
+            return False
+
+        return (
+            self.to_static
+            and ShardingOption.SHARD_OP in self.sharding
+            and self.sharding_parallel_degree > 1
+            and self.load_model_with_sharding_tensor_fusion
+            and "enable_tensor_fusion" in self.sharding_parallel_config
+        )
+
+    @property
+    def should_save_sharding_tensor_fusion_balanced_model(self):
+        if not self.enable_auto_parallel:
+            return False
+
+        return (
+            ShardingOption.SHARD_OP in self.sharding
+            and self.sharding_parallel_degree > 1
+            and not self.save_model_with_sharding_tensor_fusion
+            and "enable_tensor_fusion" in self.sharding_parallel_config
+        )
+
+    @property
+    def should_save_sharding_tensor_fusion_unbalanced_model(self):
+        if not self.enable_auto_parallel:
+            return False
+
+        return (
+            ShardingOption.SHARD_OP in self.sharding
+            and self.sharding_parallel_degree > 1
+            and self.save_model_with_sharding_tensor_fusion
+            and "enable_tensor_fusion" in self.sharding_parallel_config
+        )
