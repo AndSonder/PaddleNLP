@@ -2297,11 +2297,9 @@ class TrainingArguments:
 
     @property
     def should_load_sharding_tensor_fusion_balanced_model(self):
-        if not self.enable_auto_parallel:
-            return False
-
         return (
-            self.to_static
+            self.enable_auto_parallel
+            and self.to_static
             and ShardingOption.SHARD_OP in self.sharding
             and self.sharding_parallel_degree > 1
             and not self.load_model_with_sharding_tensor_fusion
@@ -2310,11 +2308,9 @@ class TrainingArguments:
 
     @property
     def should_load_sharding_tensor_fusion_unbalanced_model(self):
-        if not self.enable_auto_parallel:
-            return False
-
         return (
-            self.to_static
+            self.enable_auto_parallel
+            and self.to_static
             and ShardingOption.SHARD_OP in self.sharding
             and self.sharding_parallel_degree > 1
             and self.load_model_with_sharding_tensor_fusion
@@ -2323,11 +2319,10 @@ class TrainingArguments:
 
     @property
     def should_save_sharding_tensor_fusion_balanced_model(self):
-        if not self.enable_auto_parallel:
-            return False
-
         return (
-            ShardingOption.SHARD_OP in self.sharding
+            self.enable_auto_parallel
+            and self.to_static
+            and ShardingOption.SHARD_OP in self.sharding
             and self.sharding_parallel_degree > 1
             and not self.save_model_with_sharding_tensor_fusion
             and "enable_tensor_fusion" in self.sharding_parallel_config
@@ -2335,11 +2330,10 @@ class TrainingArguments:
 
     @property
     def should_save_sharding_tensor_fusion_unbalanced_model(self):
-        if not self.enable_auto_parallel:
-            return False
-
         return (
-            ShardingOption.SHARD_OP in self.sharding
+            self.enable_auto_parallel
+            and self.to_static
+            and ShardingOption.SHARD_OP in self.sharding
             and self.sharding_parallel_degree > 1
             and self.save_model_with_sharding_tensor_fusion
             and "enable_tensor_fusion" in self.sharding_parallel_config
