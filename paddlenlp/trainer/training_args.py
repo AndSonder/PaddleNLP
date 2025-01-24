@@ -620,31 +620,6 @@ class TrainingArguments:
         },
     )
 
-    load_model_with_sharding_tensor_fusion: bool = field(
-        default=False,
-        metadata={
-            "help": (
-                "When using sharding stage1, enabling tensor fusion, and setting `load_model_with_sharding_tensor_fusion` to `True`, "
-                "the model is loaded with unbalanced weights, meaning that the model weights are stored in an unbalanced format to avoid "
-                "additional memory overhead. If set to `False`, the model will be loaded with balanced weights, which may increase memory "
-                "consumption. This setting is only available in auto parallel to_static mode."
-            )
-        },
-    )
-
-    save_model_with_sharding_tensor_fusion: bool = field(
-        default=False,
-        metadata={
-            "help": (
-                "When using sharding stage1 and enabling tensor fusion, setting `save_model_with_sharding_tensor_fusion` to `True` "
-                "saves the model with unbalanced weights, which helps avoid additional memory consumption. Setting it to `False` "
-                "saves the model with balanced weights, which may increase memory usage but ensures uniform parameter distribution. "
-                "This option allows flexibility in choosing the save format based on memory requirements. "
-                "This setting is only available in auto parallel to_static mode."
-            )
-        },
-    )
-
     tensor_parallel_degree: int = field(
         default=-1,
         metadata={
@@ -2294,16 +2269,6 @@ class TrainingArguments:
                     logger.debug("{:30}: {}".format(a, v))
 
         logger.debug("")
-
-    @property
-    def should_load_model_with_tensor_fusion(self):
-        return (
-            self.enable_auto_parallel
-            and self.to_static
-            and ShardingOption.SHARD_OP in self.sharding
-            and self.sharding_parallel_degree > 1
-            and "enable_tensor_fusion" in self.sharding_parallel_config
-        )
 
     @property
     def should_save_model_with_tensor_fusion(self):
